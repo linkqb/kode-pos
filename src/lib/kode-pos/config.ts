@@ -110,16 +110,15 @@ export function kodePosUrl(
  */
 export async function getProvinces(): Promise<Province[]> {
   const result = await kodePosApi<{
-    data?: Array<{
-      id?: string;
-      prov_id?: string;
+    data: Array<{
+      id: string;
       name: string;
     }>;
   }>("/provinsi");
 
   return (result?.data ?? []).map((item) => ({
     id: item.id,
-    prov_id: item.prov_id ?? item.id ?? "",
+    prov_id: item.id,
     name: item.name,
     slug: slugify(item.name),
   }));
