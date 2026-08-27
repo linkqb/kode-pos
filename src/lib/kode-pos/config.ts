@@ -65,8 +65,6 @@ async function fetchJson<T>(url: string): Promise<T | null> {
 
 /**
  * API helper utama.
- *
- * Dipakai oleh index.astro untuk mengambil provinsi.
  */
 export async function kodePosApi<T = unknown>(
   endpoint = ""
@@ -76,22 +74,31 @@ export async function kodePosApi<T = unknown>(
 
 /**
  * URL halaman Kode Pos.
+ *
+ * Contoh:
+ * /kode-pos/
+ * /kode-pos/jawa-barat/
+ * /kode-pos/jawa-barat/bandung/
+ * /kode-pos/jawa-barat/bandung/arcamanik/
  */
 export function kodePosUrl(
   provinsi?: string,
   kota?: string,
   kecamatan?: string
 ) {
+  const parts = [
+    "kode-pos",
+    provinsi,
+    kota,
+    kecamatan,
+  ].filter(Boolean);
+
   return (
-    [
-      "/kode-pos",
-      provinsi,
-      kota,
-      kecamatan,
-    ]
-      .filter(Boolean)
-      .map(encodeURIComponent)
-      .join("/") + "/"
+    "/" +
+    parts
+      .map((part) => encodeURIComponent(part as string))
+      .join("/") +
+    "/"
   );
 }
 
@@ -122,7 +129,6 @@ export async function getProvinces(): Promise<Province[]> {
  * Cari provinsi berdasarkan slug.
  */
 export async function resolveProvince(
-  _locals: App.Locals,
   slug: string
 ): Promise<Province | undefined> {
   const provinces = await getProvinces();
@@ -139,7 +145,6 @@ export async function resolveProvince(
  * /api/kode-pos/kota?prov_id=...
  */
 export async function getCities(
-  _locals: App.Locals,
   provId: string
 ): Promise<City[]> {
   const result = await kodePosApi<{
@@ -166,12 +171,10 @@ export async function getCities(
  * Cari kota berdasarkan slug.
  */
 export async function resolveCity(
-  locals: App.Locals,
   province: Province,
   slug: string
 ): Promise<City | undefined> {
   const cities = await getCities(
-    locals,
     province.prov_id
   );
 
@@ -187,7 +190,6 @@ export async function resolveCity(
  * /api/kode-pos/kecamatan?city_id=...
  */
 export async function getDistricts(
-  _locals: App.Locals,
   cityId: string
 ): Promise<District[]> {
   const result = await kodePosApi<{
@@ -214,12 +216,10 @@ export async function getDistricts(
  * Cari kecamatan berdasarkan slug.
  */
 export async function resolveDistrict(
-  locals: App.Locals,
   city: City,
   slug: string
 ): Promise<District | undefined> {
   const districts = await getDistricts(
-    locals,
     city.city_id
   );
 
@@ -235,7 +235,6 @@ export async function resolveDistrict(
  * /api/kode-pos/kelurahan?dis_id=...
  */
 export async function getPostalCodes(
-  _locals: App.Locals,
   disId: string
 ): Promise<PostalCode[]> {
   const result = await kodePosApi<{
@@ -248,12 +247,10 @@ export async function getPostalCodes(
 }
 
 /**
- * Alias untuk API lama yang masih menggunakan
- * nama getSubdistricts.
+ * Alias untuk kompatibilitas API lama.
  */
 export async function getSubdistricts(
-  locals: App.Locals,
   disId: string
-) {
-  return getPostalCodes(locals, disId);
+): Promise<PostalCode[]> {
+  return getPostalCodes(disId);
 }
