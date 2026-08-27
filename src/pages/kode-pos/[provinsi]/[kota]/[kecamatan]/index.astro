@@ -1,0 +1,32 @@
+---
+export const prerender = false;
+import MainLayout from '../../../../../layouts/MainLayout.astro';
+import '../../../../../styles/kode-pos.css';
+
+const province = Astro.params.provinsi || '';
+const city = Astro.params.kota || '';
+const district = Astro.params.kecamatan || '';
+---
+<MainLayout
+  title={`Kode Pos ${district}, ${city}, ${province}`}
+  description={`Daftar kelurahan dan desa beserta kode pos di ${district}, ${city}, ${province}.`}
+>
+  <main class="kode-pos-page">
+    <div class="kode-pos-container">
+      <nav class="kode-pos-breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Kode Pos</a><span>/</span>
+        <span>{province}</span><span>/</span>
+        <span>{city}</span><span>/</span>
+        <span>{district}</span>
+      </nav>
+
+      <header class="kodepos-header">
+        <span class="kodepos-eyebrow">Kode Pos Indonesia</span>
+        <h1>Kode Pos {district}</h1>
+        <p class="kodepos-lead">
+          Kelurahan dan desa di {district}, {city}, {province}.
+        </p>
+      </header>
+    </div>
+  </main>
+</MainLayout>

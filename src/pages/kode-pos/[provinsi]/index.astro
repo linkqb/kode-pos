@@ -1,0 +1,11 @@
+---
+export const prerender = false;
+import MainLayout from '../../../layouts/MainLayout.astro';
+import '../../../styles/kode-pos.css';
+const province = Astro.params.provinsi || '';
+---
+<MainLayout title={`Kode Pos ${province}`} description={`Kode pos ${province}.`}>
+  <main class="kode-pos-page"><div class="kode-pos-container">
+    <h1>Kode Pos {province}</h1>
+  </div></main>
+</MainLayout>
