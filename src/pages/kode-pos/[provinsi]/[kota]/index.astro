@@ -2,29 +2,28 @@
 import {
   getProvinces,
   getCities,
-  resolveProvince,
 } from "../../../../lib/kode-pos/config";
 
 export const prerender = false;
 
 const { provinsi, kota } = Astro.params;
 
-if (!provinsi || !kota) {
-  return Astro.redirect("/kode-pos/");
-}
+const provinces = await getProvinces();
 
-const province = await resolveProvince(
-  Astro.locals,
-  provinsi
+const province = provinces.find(
+  (item) => item.slug === provinsi
 );
 
 if (!province) {
-  return new Response("Provinsi tidak ditemukan", {
-    status: 404,
-    headers: {
-      "Content-Type": "text/html; charset=utf-8",
-    },
-  });
+  return new Response(
+    `Provinsi tidak ditemukan: ${provinsi}`,
+    {
+      status: 404,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+      },
+    }
+  );
 }
 
 const cities = await getCities(
@@ -37,12 +36,15 @@ const city = cities.find(
 );
 
 if (!city) {
-  return new Response("Kabupaten/Kota tidak ditemukan", {
-    status: 404,
-    headers: {
-      "Content-Type": "text/html; charset=utf-8",
-    },
-  });
+  return new Response(
+    `Kabupaten/Kota tidak ditemukan: ${kota}`,
+    {
+      status: 404,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+      },
+    }
+  );
 }
 ---
 
@@ -50,7 +52,10 @@ if (!city) {
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  />
 
   <title>
     Kode Pos {city.name}, {province.name}
@@ -58,12 +63,11 @@ if (!city) {
 
   <meta
     name="description"
-    content={`Daftar kecamatan dan kode pos ${city.name}, ${province.name}.`}
+    content={`Daftar kode pos ${city.name}, ${province.name}.`}
   />
 </head>
 
 <body>
-
   <main>
 
     <nav>
@@ -79,15 +83,14 @@ if (!city) {
     <h1>Kode Pos {city.name}</h1>
 
     <p>
-      Daftar kecamatan dan kode pos di {city.name},
-      {province.name}.
+      Daftar kecamatan dan kode pos di
+      {city.name}, {province.name}.
     </p>
 
-    <div id="district-list">
-      Memuat kecamatan...
-    </div>
+    <p>
+      Memuat data kecamatan...
+    </p>
 
   </main>
-
 </body>
 </html>
