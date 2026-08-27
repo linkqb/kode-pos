@@ -44,106 +44,430 @@ if (q.length >= 2) {
     name="description"
     content="Cari kode pos berdasarkan provinsi, kabupaten atau kota, kecamatan, kelurahan atau desa."
   />
+
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --soft: #eff6ff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      width: min(1100px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    header {
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-inner {
+      min-height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .logo {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .logo span {
+      color: var(--primary);
+    }
+
+    .back-link {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .back-link:hover {
+      color: var(--primary);
+    }
+
+    main {
+      padding: 42px 0 70px;
+    }
+
+    .breadcrumb {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 28px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .breadcrumb a:hover {
+      color: var(--primary);
+    }
+
+    .hero {
+      max-width: 760px;
+      margin-bottom: 30px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(30px, 5vw, 44px);
+      line-height: 1.1;
+      letter-spacing: -0.035em;
+    }
+
+    .intro {
+      margin: 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 10px;
+      max-width: 760px;
+      padding: 8px;
+      margin-bottom: 38px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);
+    }
+
+    .search-box input {
+      flex: 1;
+      min-width: 0;
+      height: 46px;
+      padding: 0 14px;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--text);
+      font: inherit;
+    }
+
+    .search-box input::placeholder {
+      color: #94a3b8;
+    }
+
+    .search-box button {
+      height: 46px;
+      padding: 0 22px;
+      border: 0;
+      border-radius: 10px;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 700;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .search-box button:hover {
+      background: var(--primary-dark);
+    }
+
+    .results-header {
+      margin-bottom: 18px;
+    }
+
+    .results-header h2 {
+      margin: 0 0 5px;
+      font-size: 21px;
+    }
+
+    .results-header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .results {
+      display: grid;
+      gap: 12px;
+    }
+
+    .result-card {
+      display: block;
+      padding: 20px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease,
+        transform 0.15s ease;
+    }
+
+    .result-card:hover {
+      border-color: #bfdbfe;
+      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+      transform: translateY(-1px);
+    }
+
+    .result-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .result-name {
+      margin: 0 0 7px;
+      font-size: 17px;
+      font-weight: 750;
+    }
+
+    .location {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .postal {
+      flex-shrink: 0;
+      padding: 7px 10px;
+      background: var(--soft);
+      color: var(--primary);
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .empty {
+      padding: 35px 24px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      text-align: center;
+    }
+
+    .empty h2 {
+      margin: 0 0 8px;
+      font-size: 19px;
+    }
+
+    .empty p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    footer {
+      padding: 28px 0;
+      border-top: 1px solid var(--border);
+      background: #fff;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        width: min(100% - 24px, 1100px);
+      }
+
+      main {
+        padding: 28px 0 50px;
+      }
+
+      .header-inner {
+        min-height: 60px;
+      }
+
+      .search-box {
+        padding: 6px;
+      }
+
+      .search-box button {
+        padding: 0 16px;
+      }
+
+      .result-top {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .postal {
+        align-self: flex-start;
+      }
+    }
+  </style>
 </head>
 
 <body>
 
+  <header>
+    <div class="container header-inner">
+      <a href="/" class="logo">
+        Kode<span>Pos</span>
+      </a>
+
+      <a href="/kode-pos/" class="back-link">
+        Daftar Kode Pos
+      </a>
+    </div>
+  </header>
+
   <main>
+    <div class="container">
 
-    <nav>
-      <a href="/kode-pos/">Kode Pos</a>
-      /
-      <span>Pencarian</span>
-    </nav>
+      <nav class="breadcrumb">
+        <a href="/">Beranda</a>
+        <span>/</span>
+        <a href="/kode-pos/">Kode Pos</a>
+        <span>/</span>
+        <span>Pencarian</span>
+      </nav>
 
-    <h1>Cari Kode Pos</h1>
+      <section class="hero">
+        <h1>Cari Kode Pos</h1>
 
-    <p>
-      Cari provinsi, kabupaten/kota, kecamatan,
-      kelurahan/desa, atau kode pos.
-    </p>
-
-    <form
-      method="get"
-      action="/kode-pos/cari/"
-    >
-      <input
-        type="search"
-        name="q"
-        value={q}
-        placeholder="Cari kode pos..."
-        autocomplete="off"
-        minlength="2"
-        required
-      />
-
-      <button type="submit">
-        Cari
-      </button>
-    </form>
-
-    {
-      q && (
-        <section>
-
-          <h2>
-            Hasil pencarian
-          </h2>
-
-          <p>
-            Kata pencarian:
-            <strong>{q}</strong>
-          </p>
-
-          {
-            error ? (
-              <p>{error}</p>
-            ) : results.length > 0 ? (
-              <div>
-
-                {results.map((item) => (
-                  <article>
-
-                    <h3>
-                      {item.subdis_name}
-                    </h3>
-
-                    <p>
-                      <strong>
-                        {item.postal_code}
-                      </strong>
-                    </p>
-
-                    <p>
-                      {item.dis_name},{" "}
-                      {item.city_name},{" "}
-                      {item.prov_name}
-                    </p>
-
-                  </article>
-                ))}
-
-              </div>
-            ) : (
-              <p>
-                Tidak ditemukan hasil untuk "{q}".
-              </p>
-            )
-          }
-
-        </section>
-      )
-    }
-
-    {
-      !q && (
-        <p>
-          Masukkan nama wilayah atau kode pos untuk mencari.
+        <p class="intro">
+          Temukan kode pos berdasarkan nama provinsi,
+          kabupaten atau kota, kecamatan, kelurahan/desa,
+          atau nomor kode pos.
         </p>
-      )
-    }
+      </section>
 
+      <form
+        class="search-box"
+        method="get"
+        action="/kode-pos/cari/"
+      >
+        <input
+          type="search"
+          name="q"
+          value={q}
+          placeholder="Contoh: Aceh, Bandung, 40123..."
+          autocomplete="off"
+          minlength="2"
+          required
+        />
+
+        <button type="submit">
+          Cari
+        </button>
+      </form>
+
+      {
+        q && (
+          <section>
+
+            <div class="results-header">
+              <h2>Hasil pencarian</h2>
+
+              <p>
+                Menampilkan hasil untuk
+                <strong>{q}</strong>
+                {results.length > 0 &&
+                  ` · ${results.length} hasil`}
+              </p>
+            </div>
+
+            {
+              error ? (
+                <div class="empty">
+                  <h2>Terjadi kesalahan</h2>
+                  <p>{error}</p>
+                </div>
+              ) : results.length > 0 ? (
+                <div class="results">
+                  {results.map((item) => (
+                    <article class="result-card">
+
+                      <div class="result-top">
+
+                        <div>
+                          <h3 class="result-name">
+                            {item.subdis_name}
+                          </h3>
+
+                          <p class="location">
+                            {item.dis_name},{" "}
+                            {item.city_name},{" "}
+                            {item.prov_name}
+                          </p>
+                        </div>
+
+                        <div class="postal">
+                          {item.postal_code}
+                        </div>
+
+                      </div>
+
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div class="empty">
+                  <h2>Data tidak ditemukan</h2>
+
+                  <p>
+                    Tidak ada wilayah atau kode pos
+                    yang cocok dengan pencarian
+                    "{q}".
+                  </p>
+                </div>
+              )
+            }
+
+          </section>
+        )
+      }
+
+      {
+        !q && (
+          <div class="empty">
+            <h2>Mulai pencarian</h2>
+
+            <p>
+              Masukkan nama wilayah atau kode pos
+              pada kolom pencarian di atas.
+            </p>
+          </div>
+        )
+      }
+
+    </div>
   </main>
+
+  <footer>
+    <div class="container">
+      © {new Date().getFullYear()} KodePos
+    </div>
+  </footer>
 
 </body>
 </html>
