@@ -1,32 +1,113 @@
 ---
-export const prerender = false;
-import MainLayout from '../../../../../layouts/MainLayout.astro';
-import '../../../../../styles/kode-pos.css';
+import MainLayout from "../../../../layouts/MainLayout.astro";
+import "../../../../styles/kode-pos.css";
 
-const province = Astro.params.provinsi || '';
-const city = Astro.params.kota || '';
-const district = Astro.params.kecamatan || '';
+import {
+  resolveProvince,
+  resolveCity,
+  getDistricts,
+  kodePosUrl,
+} from "../../../../lib/kode-pos/config";
+
+const province = await resolveProvince(
+  Astro.locals,
+  Astro.params.provinsi || ""
+);
+
+const city = province
+  ? await resolveCity(
+      Astro.locals,
+      province,
+      Astro.params.kota || ""
+    )
+  : undefined;
+
+if (!province || !city) {
+  Astro.response.status = 404;
+}
+
+const districts =
+  city
+    ? await getDistricts(Astro.locals, city.city_id)
+    : [];
+
+const title = city
+  ? `Kode Pos ${city.name}, ${province!.name}`
+  : "Kabupaten / Kota Tidak Ditemukan";
+
+const description = city
+  ? `Daftar kecamatan di ${city.name}, ${province!.name} beserta informasi kode pos.`
+  : "Kabupaten atau kota kode pos tidak ditemukan.";
 ---
-<MainLayout
-  title={`Kode Pos ${district}, ${city}, ${province}`}
-  description={`Daftar kelurahan dan desa beserta kode pos di ${district}, ${city}, ${province}.`}
->
+
+<MainLayout title={title} description={description}>
   <main class="kode-pos-page">
     <div class="kode-pos-container">
-      <nav class="kode-pos-breadcrumb" aria-label="Breadcrumb">
-        <a href="/">Kode Pos</a><span>/</span>
-        <span>{province}</span><span>/</span>
-        <span>{city}</span><span>/</span>
-        <span>{district}</span>
-      </nav>
 
-      <header class="kodepos-header">
-        <span class="kodepos-eyebrow">Kode Pos Indonesia</span>
-        <h1>Kode Pos {district}</h1>
-        <p class="kodepos-lead">
-          Kelurahan dan desa di {district}, {city}, {province}.
-        </p>
-      </header>
+      {!province || !city ? (
+        <section class="kodepos-header">
+          <h1>Kabupaten / kota tidak ditemukan</h1>
+          <p class="kodepos-lead">
+            Alamat kode pos yang diminta tidak tersedia.
+          </p>
+          <a href="/kode-pos/">Kembali ke Kode Pos</a>
+        </section>
+      ) : (
+        <>
+          <nav
+            class="kode-pos-breadcrumb"
+            aria-label="Breadcrumb"
+          >
+            <a href="/kode-pos/">Kode Pos</a>
+            <span>/</span>
+
+            <a href={kodePosUrl(province.slug)}>
+              {province.name}
+            </a>
+
+            <span>/</span>
+
+            <span>{city.name}</span>
+          </nav>
+
+          <header class="kodepos-header">
+            <span class="kodepos-eyebrow">
+              Kode Pos Indonesia
+            </span>
+
+            <h1>Kode Pos {city.name}</h1>
+
+            <p class="kodepos-lead">
+              Pilih kecamatan di {city.name}, {province.name}.
+            </p>
+          </header>
+
+          <section class="kodepos-grid">
+            {districts.map((district) => (
+              <a
+                class="kodepos-card"
+                href={kodePosUrl(
+                  province.slug,
+                  city.slug,
+                  district.slug
+                )}
+              >
+                <div class="kodepos-card-content">
+                  <h2>{district.name}</h2>
+                  <p>
+                    Lihat kelurahan, desa, dan kode pos
+                  </p>
+                </div>
+
+                <span class="kodepos-card-arrow">
+                  →
+                </span>
+              </a>
+            ))}
+          </section>
+        </>
+      )}
+
     </div>
   </main>
 </MainLayout>
