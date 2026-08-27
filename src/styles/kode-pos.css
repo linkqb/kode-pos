@@ -1,0 +1,24 @@
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, sans-serif; color: #111827; background: #fff; }
+.site-header { display:flex; justify-content:space-between; gap:1rem; padding:1rem max(1rem, calc((100% - 1100px)/2)); border-bottom:1px solid #e5e7eb; }
+.site-header a { color:inherit; text-decoration:none; }
+.site-header nav { display:flex; gap:1rem; }
+.kode-pos-page { padding: 2rem 1rem 4rem; }
+.kode-pos-container { max-width:1100px; margin:auto; }
+.kodepos-header { margin: 1rem 0 2rem; }
+.kodepos-eyebrow, .kodepos-section-eyebrow { font-size:.8rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:#6b7280; }
+.kodepos-lead { color:#6b7280; }
+.kode-pos-breadcrumb { display:flex; flex-wrap:wrap; gap:.5rem; font-size:.9rem; color:#6b7280; }
+.kode-pos-breadcrumb a { color:inherit; }
+.kodepos-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:1rem; }
+.kodepos-card { display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:1rem; border:1px solid #e5e7eb; border-radius:12px; text-decoration:none; color:inherit; background:#fff; }
+.kodepos-card h2 { margin:0 0 .35rem; font-size:1rem; }
+.kodepos-card p { margin:0; color:#6b7280; font-size:.9rem; }
+.kodepos-card-arrow { font-weight:700; white-space:nowrap; }
+.kodepos-search { margin-top:2rem; }
+.kodepos-section-heading { display:flex; justify-content:space-between; align-items:end; margin-bottom:1rem; }
+.kodepos-count { color:#6b7280; font-size:.9rem; }
+.search-box { display:grid; gap:.75rem; max-width:700px; }
+.search-box select, .search-box button { padding:.8rem; border:1px solid #d1d5db; border-radius:8px; font:inherit; }
+.search-box button { cursor:pointer; }
+@media (max-width:600px) { .site-header { flex-direction:column; } .kodepos-section-heading { align-items:start; flex-direction:column; gap:.5rem; } }

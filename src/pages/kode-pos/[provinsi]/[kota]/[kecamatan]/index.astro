@@ -1,0 +1,70 @@
+---
+import MainLayout from '../../../../../layouts/MainLayout.astro';
+import '../../../../../styles/kode-pos.css';
+import {
+  getProvinces,
+  getCities,
+  getDistricts,
+  getSubdistricts,
+  kodePosUrl,
+  slugify
+} from '../../../../../lib/kode-pos/config';
+
+const provinceSlug = Astro.params.provinsi ?? '';
+const citySlug = Astro.params.kota ?? '';
+const districtSlug = Astro.params.kecamatan ?? '';
+
+const provinces = await getProvinces();
+const province = provinces.find((p) => slugify(p.name) === provinceSlug);
+
+const cities = province ? await getCities(province.id) : [];
+const city = cities.find((c) => slugify(c.name) === citySlug);
+
+const districts = city ? await getDistricts(city.id) : [];
+const district = districts.find((d) => slugify(d.name) === districtSlug);
+
+if (!province || !city || !district) Astro.response.status = 404;
+
+// Hanya request kelurahan untuk kecamatan yang sedang dibuka.
+const postalCodes = district ? await getSubdistricts(district.id) : [];
+---
+<MainLayout
+  title={district ? `Kode Pos ${district.name}, ${city!.name}, ${province!.name}` : 'Kecamatan Tidak Ditemukan'}
+  description={district ? `Daftar kelurahan dan desa beserta kode pos di ${district.name}, ${city!.name}, ${province!.name}.` : 'Kecamatan tidak ditemukan.'}
+>
+  <main class="kode-pos-page">
+    <div class="kode-pos-container">
+      {province && city && district ? (
+        <>
+          <nav class="kode-pos-breadcrumb">
+            <a href="/kode-pos/">Kode Pos</a><span>/</span>
+            <a href={kodePosUrl(slugify(province.name))}>{province.name}</a><span>/</span>
+            <a href={kodePosUrl(slugify(province.name), slugify(city.name))}>{city.name}</a><span>/</span>
+            <span>{district.name}</span>
+          </nav>
+          <header class="kodepos-header">
+            <span class="kodepos-eyebrow">Kode Pos Indonesia</span>
+            <h1>Kode Pos {district.name}</h1>
+            <p class="kodepos-lead">Kelurahan dan desa di {district.name}, {city.name}, {province.name}.</p>
+          </header>
+          <section class="kodepos-search">
+            <div class="kodepos-section-heading">
+              <div><span class="kodepos-section-eyebrow">Wilayah</span><h2>Kelurahan / Desa</h2></div>
+              <span class="kodepos-count">{postalCodes.length} data</span>
+            </div>
+            <div class="kodepos-grid">
+              {postalCodes.map((item) => (
+                <article class="kodepos-card">
+                  <div><h2>{item.name}</h2><p>{district.name}, {city.name}</p></div>
+                  <strong class="kodepos-card-arrow">{item.postal_code}</strong>
+                </article>
+              ))}
+            </div>
+          </section>
+        </>
+      ) : (
+        <section class="kodepos-header"><h1>Kecamatan tidak ditemukan</h1><a href="/kode-pos/">Kembali ke Kode Pos</a></section>
+      )}
+    </div>
+  </main>
+</MainLayout>
