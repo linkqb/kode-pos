@@ -1,0 +1,82 @@
+---
+const q = Astro.url.searchParams.get("q")?.trim() || "";
+
+const siteUrl =
+  import.meta.env.SITE_URL ||
+  "https://kodepos.linkqb.com";
+
+const canonicalUrl = `${siteUrl}/kode-pos/cari/`;
+---
+
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>
+      {q ? `Cari Kode Pos: ${q}` : "Cari Kode Pos"}
+    </title>
+
+    <meta
+      name="description"
+      content="Cari kode pos berdasarkan provinsi, kabupaten atau kota, kecamatan, kelurahan atau desa."
+    />
+
+    <link rel="canonical" href={canonicalUrl} />
+  </head>
+
+  <body>
+    <main>
+      <nav>
+        <a href="/kode-pos/">Kode Pos</a>
+        /
+        <span>Pencarian</span>
+      </nav>
+
+      <h1>Cari Kode Pos</h1>
+
+      <p>
+        Cari provinsi, kabupaten/kota, kecamatan,
+        kelurahan/desa, atau kode pos.
+      </p>
+
+      <form method="get" action="/kode-pos/cari/">
+        <input
+          type="search"
+          name="q"
+          value={q}
+          placeholder="Cari kode pos..."
+          autocomplete="off"
+        />
+
+        <button type="submit">
+          Cari
+        </button>
+      </form>
+
+      {
+        q ? (
+          <section>
+            <h2>Hasil pencarian</h2>
+
+            <p>
+              Pencarian untuk: <strong>{q}</strong>
+            </p>
+
+            <p>
+              Data pencarian akan ditampilkan setelah API
+              pencarian disambungkan.
+            </p>
+          </section>
+        ) : (
+          <section>
+            <p>
+              Masukkan nama wilayah atau kode pos untuk mencari.
+            </p>
+          </section>
+        )
+      }
+    </main>
+  </body>
+</html>
