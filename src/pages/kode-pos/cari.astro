@@ -1,39 +1,5 @@
 ---
-import {
-  getProvinces,
-  getCities,
-} from "../../lib/kode-pos/config";
-
-export const prerender = false;
-
-const { provinsi } = Astro.params;
-
-if (!provinsi || provinsi === "cari") {
-  return Astro.redirect("/kode-pos/cari/");
-}
-
-const provinces = await getProvinces();
-
-const province = provinces.find(
-  (item) => item.slug === provinsi
-);
-
-if (!province) {
-  return new Response(
-    `Provinsi tidak ditemukan`,
-    {
-      status: 404,
-      headers: {
-        "Content-Type": "text/html; charset=utf-8",
-      },
-    }
-  );
-}
-
-const cities = await getCities(
-  Astro.locals,
-  province.prov_id
-);
+const q = Astro.url.searchParams.get("q")?.trim() || "";
 ---
 
 <!doctype html>
@@ -43,15 +9,18 @@ const cities = await getCities(
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>
-      {q ? `Cari Kode Pos: ${q}` : "Cari Kode Pos"}
+      {q ? `Cari Kode Pos ${q}` : "Cari Kode Pos"}
     </title>
 
     <meta
       name="description"
-      content="Cari kode pos berdasarkan provinsi, kabupaten atau kota, kecamatan, kelurahan atau desa."
+      content="Cari kode pos Indonesia berdasarkan nama wilayah atau kode pos."
     />
 
-    <link rel="canonical" href={canonicalUrl} />
+    <link
+      rel="canonical"
+      href="https://kodepos.linkqb.com/kode-pos/cari/"
+    />
   </head>
 
   <body>
@@ -83,28 +52,19 @@ const cities = await getCities(
         </button>
       </form>
 
-      {
-        q ? (
-          <section>
-            <h2>Hasil pencarian</h2>
+      {q && (
+        <section>
+          <h2>Hasil pencarian</h2>
+          <p>
+            Kata pencarian:
+            <strong>{q}</strong>
+          </p>
 
-            <p>
-              Pencarian untuk: <strong>{q}</strong>
-            </p>
-
-            <p>
-              Data pencarian akan ditampilkan setelah API
-              pencarian disambungkan.
-            </p>
-          </section>
-        ) : (
-          <section>
-            <p>
-              Masukkan nama wilayah atau kode pos untuk mencari.
-            </p>
-          </section>
-        )
-      }
+          <p>
+            Belum ada hasil pencarian.
+          </p>
+        </section>
+      )}
     </main>
   </body>
 </html>
