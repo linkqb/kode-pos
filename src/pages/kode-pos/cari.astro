@@ -1,70 +1,165 @@
 ---
-const q = Astro.url.searchParams.get("q")?.trim() || "";
+const API_BASE =
+  "https://api-kodepos.linkq.workers.dev/api/kode-pos";
+
+const q = (Astro.url.searchParams.get("q") || "").trim();
+
+type SearchResult = {
+  postal_id?: string;
+  subdis_id: string;
+  dis_id: string;
+  city_id: string;
+  prov_id: string;
+  postal_code: string;
+  subdis_name: string;
+  dis_name: string;
+  city_name: string;
+  prov_name: string;
+};
+
+let results: SearchResult[] = [];
+let error = "";
+
+if (q.length >= 2) {
+  try {
+    const response = await fetch(
+      `${API_BASE}/search?q=${encodeURIComponent(q)}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`API HTTP ${response.status}`);
+    }
+
+    const json = await response.json();
+
+    results = json.data ?? [];
+  } catch (err) {
+    console.error("Search API error:", err);
+    error = "Gagal mengambil data pencarian.";
+  }
+}
+
+const canonicalUrl = q
+  ? `${Astro.site ?? "https://kodepos.linkqb.com"}/kode-pos/cari/?q=${encodeURIComponent(q)}`
+  : `${Astro.site ?? "https://kodepos.linkqb.com"}/kode-pos/cari/`;
 ---
 
 <!doctype html>
 <html lang="id">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  />
 
-    <title>
-      {q ? `Cari Kode Pos ${q}` : "Cari Kode Pos"}
-    </title>
+  <title>
+    {q ? `Cari Kode Pos: ${q}` : "Cari Kode Pos"}
+  </title>
 
-    <meta
-      name="description"
-      content="Cari kode pos Indonesia berdasarkan nama wilayah atau kode pos."
-    />
+  <meta
+    name="description"
+    content="Cari kode pos berdasarkan provinsi, kabupaten atau kota, kecamatan, kelurahan atau desa."
+  />
 
-    <link
-      rel="canonical"
-      href="https://kodepos.linkqb.com/kode-pos/cari/"
-    />
-  </head>
+  <link rel="canonical" href={canonicalUrl} />
+</head>
 
-  <body>
-    <main>
-      <nav>
-        <a href="/kode-pos/">Kode Pos</a>
-        /
-        <span>Pencarian</span>
-      </nav>
+<body>
+  <main>
 
-      <h1>Cari Kode Pos</h1>
+    <nav>
+      <a href="/kode-pos/">Kode Pos</a>
+      /
+      <span>Pencarian</span>
+    </nav>
 
-      <p>
-        Cari provinsi, kabupaten/kota, kecamatan,
-        kelurahan/desa, atau kode pos.
-      </p>
+    <h1>Cari Kode Pos</h1>
 
-      <form method="get" action="/kode-pos/cari/">
-        <input
-          type="search"
-          name="q"
-          value={q}
-          placeholder="Cari kode pos..."
-          autocomplete="off"
-        />
+    <p>
+      Cari provinsi, kabupaten/kota, kecamatan,
+      kelurahan/desa, atau kode pos.
+    </p>
 
-        <button type="submit">
-          Cari
-        </button>
-      </form>
+    <form method="get" action="/kode-pos/cari/">
+      <input
+        type="search"
+        name="q"
+        value={q}
+        placeholder="Contoh: aceh, bandung, 40123..."
+        autocomplete="off"
+        minlength="2"
+        required
+      />
 
-      {q && (
+      <button type="submit">
+        Cari
+      </button>
+    </form>
+
+    {
+      q && (
         <section>
-          <h2>Hasil pencarian</h2>
-          <p>
-            Kata pencarian:
-            <strong>{q}</strong>
-          </p>
+          <h2>
+            Hasil pencarian untuk "{q}"
+          </h2>
 
+          {
+            error ? (
+              <p>{error}</p>
+            ) : results.length > 0 ? (
+              <>
+                <p>
+                  Ditemukan {results.length} hasil.
+                </p>
+
+                <div>
+                  {results.map((item) => (
+                    <article>
+                      <h3>
+                        {item.subdis_name}
+                      </h3>
+
+                      <p>
+                        <strong>Kode Pos:</strong>{" "}
+                        {item.postal_code}
+                      </p>
+
+                      <p>
+                        {item.dis_name}, {item.city_name},{" "}
+                        {item.prov_name}
+                      </p>
+
+                      <a
+                        href={`/kode-pos/${slugify(item.prov_name)}/${slugify(item.city_name)}/${slugify(item.dis_name)}/`}
+                      >
+                        Lihat kecamatan
+                      </a>
+                    </article>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p>
+                Tidak ditemukan hasil untuk "{q}".
+              </p>
+            )
+          }
+        </section>
+      )
+    }
+
+    {
+      !q && (
+        <section>
           <p>
-            Belum ada hasil pencarian.
+            Masukkan nama wilayah atau kode pos untuk mencari.
           </p>
         </section>
-      )}
-    </main>
-  </body>
+      )
+    }
+
+  </main>
+</body>
 </html>
+
