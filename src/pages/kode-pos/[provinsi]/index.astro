@@ -1,97 +1,99 @@
 ---
 import MainLayout from "../../../layouts/MainLayout.astro";
 import "../../../styles/kode-pos.css";
+
 import {
-  getProvinces,
+  resolveProvince,
   getCities,
   kodePosUrl,
 } from "../../../lib/kode-pos/config";
 
-export async function getStaticPaths() {
-  const provinces = await getProvinces();
+const province = await resolveProvince(
+  Astro.locals,
+  Astro.params.provinsi || ""
+);
 
-  return provinces.map((province) => ({
-    params: {
-      provinsi: province.slug,
-    },
-    props: {
-      province,
-    },
-  }));
+if (!province) {
+  Astro.response.status = 404;
 }
 
-const { province } = Astro.props;
+const cities = province
+  ? await getCities(Astro.locals, province.prov_id)
+  : [];
 
-const cities = await getCities(province.prov_id);
+const title = province
+  ? `Kode Pos ${province.name}`
+  : "Provinsi Tidak Ditemukan";
 
-const title = `Kode Pos ${province.name}`;
-
-const description = `Daftar kabupaten dan kota beserta kode pos di ${province.name}.`;
+const description = province
+  ? `Daftar kabupaten dan kota beserta informasi kode pos di ${province.name}.`
+  : "Provinsi kode pos tidak ditemukan.";
 ---
 
 <MainLayout title={title} description={description}>
   <main class="kode-pos-page">
     <div class="kode-pos-container">
 
-      <nav class="kode-pos-breadcrumb" aria-label="Breadcrumb">
-        <a href="/">Kode Pos</a>
-        <span>/</span>
-        <span>{province.name}</span>
-      </nav>
+      {!province ? (
+        <section class="kodepos-header">
+          <h1>Provinsi tidak ditemukan</h1>
 
-      <header class="kodepos-header">
-        <span class="kodepos-eyebrow">Kode Pos Indonesia</span>
+          <p class="kodepos-lead">
+            Alamat kode pos yang diminta tidak tersedia.
+          </p>
 
-        <h1>Kode Pos {province.name}</h1>
+          <a href="/kode-pos/">
+            Kembali ke Kode Pos
+          </a>
+        </section>
+      ) : (
+        <>
+          <nav
+            class="kode-pos-breadcrumb"
+            aria-label="Breadcrumb"
+          >
+            <a href="/kode-pos/">Kode Pos</a>
+            <span>/</span>
+            <span>{province.name}</span>
+          </nav>
 
-        <p class="kodepos-lead">
-          Pilih kabupaten atau kota di {province.name}.
-        </p>
-      </header>
+          <header class="kodepos-header">
+            <span class="kodepos-eyebrow">
+              Kode Pos Indonesia
+            </span>
 
-      <section class="kodepos-search" aria-labelledby="city-list">
+            <h1>Kode Pos {province.name}</h1>
 
-        <div class="kodepos-section-heading">
-          <div>
-            <span class="kodepos-section-eyebrow">Wilayah</span>
-            <h2 id="city-list">Kabupaten / Kota</h2>
-          </div>
+            <p class="kodepos-lead">
+              Pilih kabupaten atau kota di {province.name}.
+            </p>
+          </header>
 
-          <span class="kodepos-count">
-            {cities.length} wilayah
-          </span>
-        </div>
+          <section class="kodepos-grid">
+            {cities.map((city) => (
+              <a
+                class="kodepos-card"
+                href={kodePosUrl(
+                  province.slug,
+                  city.slug
+                )}
+              >
+                <div class="kodepos-card-content">
+                  <h2>{city.name}</h2>
 
-        {
-          cities.length > 0 ? (
-            <div class="kodepos-grid">
-              {cities.map((city) => (
-                <a
-                  class="kodepos-card"
-                  href={kodePosUrl(
-                    province.slug,
-                    city.slug
-                  )}
-                >
-                  <div class="kodepos-card-content">
-                    <h2>{city.name}</h2>
-                    <p>
-                      Lihat kecamatan dan kode pos
-                    </p>
-                  </div>
+                  <p>
+                    Lihat kecamatan dan kode pos
+                  </p>
+                </div>
 
-                  <span class="kodepos-card-arrow">
-                    →
-                  </span>
-                </a>
-              ))}
-            </div>
-          ) : (
-            <p>Data kabupaten / kota belum tersedia.</p>
-          )
-        }
-
-      </section>
+                <span class="kodepos-card-arrow">
+                  →
+                </span>
+              </a>
+            ))}
+          </section>
+        </>
+      )}
 
     </div>
   </main>
