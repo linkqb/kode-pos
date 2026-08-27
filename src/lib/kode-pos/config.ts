@@ -25,16 +25,10 @@ export type District = {
 };
 
 export type PostalCode = {
-  postal_id?: string;
-  subdis_id: string;
+  id?: string;
   dis_id: string;
-  city_id: string;
-  prov_id: string;
+  name: string;
   postal_code: string;
-  subdis_name: string;
-  dis_name: string;
-  city_name: string;
-  prov_name: string;
 };
 
 function slugify(value: string) {
@@ -233,15 +227,26 @@ export async function resolveDistrict(
  * /api/kode-pos/kelurahan?dis_id=...
  */
 export async function getPostalCodes(
+  _locals: App.Locals,
   disId: string
 ): Promise<PostalCode[]> {
   const result = await kodePosApi<{
-    data?: PostalCode[];
+    data?: Array<{
+      id?: string;
+      dis_id?: string;
+      name: string;
+      postal_code: string;
+    }>;
   }>(
     `/kelurahan?dis_id=${encodeURIComponent(disId)}`
   );
 
-  return result?.data ?? [];
+  return (result?.data ?? []).map((item) => ({
+    id: item.id,
+    dis_id: item.dis_id ?? disId,
+    name: item.name,
+    postal_code: item.postal_code,
+  }));
 }
 
 /**
