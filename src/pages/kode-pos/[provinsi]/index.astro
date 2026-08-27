@@ -1,0 +1,26 @@
+---
+import MainLayout from "../../../layouts/MainLayout.astro";
+import "../../../styles/kode-pos.css";
+import { API_BASE_URL } from "../../../lib/kode-pos/config";
+const provinsi = Astro.params.provinsi || "";
+---
+<MainLayout title={`Kode Pos ${provinsi.replaceAll("-", " ")}`} description="Daftar kabupaten dan kota.">
+<main class="kode-pos-page"><div class="kode-pos-container">
+<nav class="kode-pos-breadcrumb"><a href="/">Kode Pos</a><span>/</span><span id="province-name">Memuat...</span></nav>
+<header class="kodepos-header"><h1>Kode Pos <span id="heading-name">Provinsi</span></h1><p class="kodepos-lead">Pilih kabupaten atau kota.</p></header>
+<div id="status" class="kodepos-lead">Memuat...</div><section id="grid" class="kodepos-grid"></section>
+</div></main>
+</MainLayout>
+<script define:vars={{ API_BASE_URL, provinsi }}>
+const norm=v=>v.toLowerCase().trim().replace(/[()]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+const grid=document.querySelector("#grid"),status=document.querySelector("#status");
+try {
+ const r=await fetch(`${API_BASE_URL}/api/kode-pos/provinsi`); const j=await r.json();
+ const p=(j.data||[]).find(x=>norm(x.name)===provinsi);
+ if(!p) throw new Error("not found");
+ document.querySelector("#province-name").textContent=p.name; document.querySelector("#heading-name").textContent=p.name;
+ const cr=await fetch(`${API_BASE_URL}/api/kode-pos/kota?prov_id=${encodeURIComponent(p.id)}`); const cj=await cr.json();
+ const data=cj.data||[]; status.textContent=`${data.length} kabupaten/kota`;
+ grid.innerHTML=data.map(c=>`<a class="kodepos-card" href="/kode-pos/${norm(p.name)}/${norm(c.name)}/"><div class="kodepos-card-content"><h2>${c.name}</h2><p>Lihat kecamatan</p></div><span class="kodepos-card-arrow">→</span></a>`).join("");
+} catch { status.textContent="Provinsi tidak ditemukan atau data tidak dapat dimuat."; }
+</script>
