@@ -144,26 +144,26 @@ export async function resolveProvince(
  * /api/kode-pos/kota?prov_id=...
  */
 export async function getCities(
+  _locals: App.Locals,
   provId: string
 ): Promise<City[]> {
   const result = await kodePosApi<{
     data?: Array<{
       id?: string;
-      city_id?: string;
       prov_id?: string;
-      name: string;
+      name?: string;
     }>;
-  }>(
-    `/kota?prov_id=${encodeURIComponent(provId)}`
-  );
+  }>(`/kota?prov_id=${encodeURIComponent(provId)}`);
 
-  return (result?.data ?? []).map((item) => ({
-    id: item.id,
-    city_id: item.city_id ?? item.id ?? "",
-    prov_id: item.prov_id ?? provId,
-    name: item.name,
-    slug: slugify(item.name),
-  }));
+  return (result?.data ?? [])
+    .filter((item) => item.id && item.name)
+    .map((item) => ({
+      id: item.id,
+      city_id: item.id!,
+      prov_id: item.prov_id ?? provId,
+      name: item.name!,
+      slug: slugify(item.name!),
+    }));
 }
 
 /**
