@@ -1,0 +1,13 @@
+---
+const { title = "Kode Pos Indonesia", description = "Cari kode pos Indonesia." } = Astro.props;
+---
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width" />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+</head>
+<body><slot /></body>
+</html>

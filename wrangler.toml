@@ -1,0 +1,6 @@
+name = "kode-pos"
+compatibility_date = "2026-08-27"
+pages_build_output_dir = "./dist"
+
+# KV can be added here later when the production KV namespace is ready.
+# Do not add a placeholder binding; a real namespace ID is required.
