@@ -9,7 +9,7 @@ export default defineConfig({
 
   site:
     process.env.SITE_URL ||
-    'https://kode-pos.pages.dev',
+    'https://kodepos.linkqb.com',
 
   integrations: [
     sitemap()
