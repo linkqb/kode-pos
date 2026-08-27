@@ -2,106 +2,258 @@ const API_BASE =
   "https://api-kodepos.linkq.workers.dev/api/kode-pos";
 
 export type Province = {
-  id: string;
+  id?: string;
+  prov_id: string;
   name: string;
+  slug: string;
 };
 
 export type City = {
-  id: string;
+  id?: string;
+  city_id: string;
   prov_id: string;
   name: string;
+  slug: string;
 };
 
 export type District = {
-  id: string;
+  id?: string;
+  dis_id: string;
   city_id: string;
   name: string;
+  slug: string;
 };
 
-export type Subdistrict = {
-  id: string;
+export type PostalCode = {
+  postal_id?: string;
+  subdis_id: string;
   dis_id: string;
-  name: string;
+  city_id: string;
+  prov_id: string;
   postal_code: string;
+  subdis_name: string;
+  dis_name: string;
+  city_name: string;
+  prov_name: string;
 };
 
-async function request<T>(path: string): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`);
-
-  if (!response.ok) {
-    throw new Error(`API error: ${response.status}`);
-  }
-
-  return response.json();
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/&/g, "dan")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
 }
 
-export const kodePosApi = {
-  async provinces(): Promise<Province[]> {
-    const result = await request<{ data: Province[] }>(
-      "/provinsi"
-    );
+async function fetchJson<T>(url: string): Promise<T | null> {
+  try {
+    const response = await fetch(url);
 
-    return result.data ?? [];
-  },
+    if (!response.ok) {
+      console.error(`Kode Pos API ${response.status}: ${url}`);
+      return null;
+    }
 
-  async cities(provId: string): Promise<City[]> {
-    const result = await request<{ data: City[] }>(
-      `/kota?prov_id=${encodeURIComponent(provId)}`
-    );
-
-    return result.data ?? [];
-  },
-
-  async districts(cityId: string): Promise<District[]> {
-    const result = await request<{ data: District[] }>(
-      `/kecamatan?city_id=${encodeURIComponent(cityId)}`
-    );
-
-    return result.data ?? [];
-  },
-
-  async subdistricts(disId: string): Promise<Subdistrict[]> {
-    const result = await request<{ data: Subdistrict[] }>(
-      `/kelurahan?dis_id=${encodeURIComponent(disId)}`
-    );
-
-    return result.data ?? [];
-  },
-
-  async postal(subdisId: string) {
-    const result = await request<{
-      data: {
-        postal_id: string;
-        subdis_id: string;
-        dis_id: string;
-        city_id: string;
-        prov_id: string;
-        postal_code: string;
-        subdis_name: string;
-        dis_name: string;
-        city_name: string;
-        prov_name: string;
-      };
-    }>(
-      `/postal?subdis_id=${encodeURIComponent(subdisId)}`
-    );
-
-    return result.data;
+    return await response.json();
+  } catch (error) {
+    console.error("Kode Pos API error:", error);
+    return null;
   }
-};
+}
 
+/**
+ * API helper utama.
+ *
+ * Dipakai oleh index.astro untuk mengambil provinsi.
+ */
+export async function kodePosApi<T = unknown>(
+  endpoint = ""
+): Promise<T | null> {
+  return fetchJson<T>(`${API_BASE}${endpoint}`);
+}
+
+/**
+ * URL halaman Kode Pos.
+ */
 export function kodePosUrl(
   provinsi?: string,
   kota?: string,
   kecamatan?: string
 ) {
-  return [
-    "/kode-pos",
-    provinsi,
-    kota,
-    kecamatan
-  ]
-    .filter(Boolean)
-    .map(encodeURIComponent)
-    .join("/") + "/";
+  return (
+    [
+      "/kode-pos",
+      provinsi,
+      kota,
+      kecamatan,
+    ]
+      .filter(Boolean)
+      .map(encodeURIComponent)
+      .join("/") + "/"
+  );
+}
+
+/**
+ * Provinsi
+ *
+ * Endpoint:
+ * /api/kode-pos/provinsi
+ */
+export async function getProvinces(): Promise<Province[]> {
+  const result = await kodePosApi<{
+    data?: Array<{
+      id?: string;
+      prov_id?: string;
+      name: string;
+    }>;
+  }>("/provinsi");
+
+  return (result?.data ?? []).map((item) => ({
+    id: item.id,
+    prov_id: item.prov_id ?? item.id ?? "",
+    name: item.name,
+    slug: slugify(item.name),
+  }));
+}
+
+/**
+ * Cari provinsi berdasarkan slug.
+ */
+export async function resolveProvince(
+  _locals: App.Locals,
+  slug: string
+): Promise<Province | undefined> {
+  const provinces = await getProvinces();
+
+  return provinces.find(
+    (province) => province.slug === slug
+  );
+}
+
+/**
+ * Kabupaten / Kota
+ *
+ * Endpoint:
+ * /api/kode-pos/kota?prov_id=...
+ */
+export async function getCities(
+  _locals: App.Locals,
+  provId: string
+): Promise<City[]> {
+  const result = await kodePosApi<{
+    data?: Array<{
+      id?: string;
+      city_id?: string;
+      prov_id?: string;
+      name: string;
+    }>;
+  }>(
+    `/kota?prov_id=${encodeURIComponent(provId)}`
+  );
+
+  return (result?.data ?? []).map((item) => ({
+    id: item.id,
+    city_id: item.city_id ?? item.id ?? "",
+    prov_id: item.prov_id ?? provId,
+    name: item.name,
+    slug: slugify(item.name),
+  }));
+}
+
+/**
+ * Cari kota berdasarkan slug.
+ */
+export async function resolveCity(
+  locals: App.Locals,
+  province: Province,
+  slug: string
+): Promise<City | undefined> {
+  const cities = await getCities(
+    locals,
+    province.prov_id
+  );
+
+  return cities.find(
+    (city) => city.slug === slug
+  );
+}
+
+/**
+ * Kecamatan
+ *
+ * Endpoint:
+ * /api/kode-pos/kecamatan?city_id=...
+ */
+export async function getDistricts(
+  _locals: App.Locals,
+  cityId: string
+): Promise<District[]> {
+  const result = await kodePosApi<{
+    data?: Array<{
+      id?: string;
+      dis_id?: string;
+      city_id?: string;
+      name: string;
+    }>;
+  }>(
+    `/kecamatan?city_id=${encodeURIComponent(cityId)}`
+  );
+
+  return (result?.data ?? []).map((item) => ({
+    id: item.id,
+    dis_id: item.dis_id ?? item.id ?? "",
+    city_id: item.city_id ?? cityId,
+    name: item.name,
+    slug: slugify(item.name),
+  }));
+}
+
+/**
+ * Cari kecamatan berdasarkan slug.
+ */
+export async function resolveDistrict(
+  locals: App.Locals,
+  city: City,
+  slug: string
+): Promise<District | undefined> {
+  const districts = await getDistricts(
+    locals,
+    city.city_id
+  );
+
+  return districts.find(
+    (district) => district.slug === slug
+  );
+}
+
+/**
+ * Kelurahan / Desa + Kode Pos
+ *
+ * Endpoint:
+ * /api/kode-pos/kelurahan?dis_id=...
+ */
+export async function getPostalCodes(
+  _locals: App.Locals,
+  disId: string
+): Promise<PostalCode[]> {
+  const result = await kodePosApi<{
+    data?: PostalCode[];
+  }>(
+    `/kelurahan?dis_id=${encodeURIComponent(disId)}`
+  );
+
+  return result?.data ?? [];
+}
+
+/**
+ * Alias untuk API lama yang masih menggunakan
+ * nama getSubdistricts.
+ */
+export async function getSubdistricts(
+  locals: App.Locals,
+  disId: string
+) {
+  return getPostalCodes(locals, disId);
 }
