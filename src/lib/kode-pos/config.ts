@@ -189,28 +189,27 @@ export async function resolveCity(
  * /api/kode-pos/kecamatan?city_id=...
  */
 export async function getDistricts(
+  _locals: App.Locals,
   cityId: string
 ): Promise<District[]> {
   const result = await kodePosApi<{
     data?: Array<{
       id?: string;
-      dis_id?: string;
       city_id?: string;
-      name: string;
+      name?: string;
     }>;
-  }>(
-    `/kecamatan?city_id=${encodeURIComponent(cityId)}`
-  );
+  }>(`/kecamatan?city_id=${encodeURIComponent(cityId)}`);
 
-  return (result?.data ?? []).map((item) => ({
-    id: item.id,
-    dis_id: item.dis_id ?? item.id ?? "",
-    city_id: item.city_id ?? cityId,
-    name: item.name,
-    slug: slugify(item.name),
-  }));
+  return (result?.data ?? [])
+    .filter((item) => item.id && item.name)
+    .map((item) => ({
+      id: item.id,
+      dis_id: item.id!,
+      city_id: item.city_id ?? cityId,
+      name: item.name!,
+      slug: slugify(item.name!),
+    }));
 }
-
 /**
  * Cari kecamatan berdasarkan slug.
  */
