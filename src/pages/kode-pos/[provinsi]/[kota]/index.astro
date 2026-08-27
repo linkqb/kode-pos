@@ -1,13 +1,129 @@
 ---
-export const prerender = false;
-import MainLayout from '../../../../layouts/MainLayout.astro';
-import '../../../../styles/kode-pos.css';
-const province = Astro.params.provinsi || '';
-const city = Astro.params.kota || '';
+import MainLayout from "../../../../layouts/MainLayout.astro";
+import "../../../../styles/kode-pos.css";
+import {
+  getProvinces,
+  getCities,
+  kodePosUrl,
+} from "../../../../lib/kode-pos/config";
+
+export async function getStaticPaths() {
+  const provinces = await getProvinces();
+
+  const paths = [];
+
+  for (const province of provinces) {
+    const cities = await getCities(province.prov_id);
+
+    for (const city of cities) {
+      paths.push({
+        params: {
+          provinsi: province.slug,
+          kota: city.slug,
+        },
+        props: {
+          province,
+          city,
+        },
+      });
+    }
+  }
+
+  return paths;
+}
+
+const { province, city } = Astro.props;
+
+const title = `Kode Pos ${city.name}, ${province.name}`;
+
+const description =
+  `Daftar kecamatan di ${city.name}, ${province.name} beserta informasi kode pos.`;
+
+const districts = await getDistricts(city.city_id);
 ---
-<MainLayout title={`Kode Pos ${city}, ${province}`} description={`Kode pos ${city}, ${province}.`}>
-  <main class="kode-pos-page"><div class="kode-pos-container">
-    <h1>Kode Pos {city}</h1>
-    <p>{province}</p>
-  </div></main>
+
+<MainLayout title={title} description={description}>
+  <main class="kode-pos-page">
+    <div class="kode-pos-container">
+
+      <nav class="kode-pos-breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Kode Pos</a>
+        <span>/</span>
+
+        <a href={kodePosUrl(province.slug)}>
+          {province.name}
+        </a>
+
+        <span>/</span>
+        <span>{city.name}</span>
+      </nav>
+
+      <header class="kodepos-header">
+        <span class="kodepos-eyebrow">
+          Kode Pos Indonesia
+        </span>
+
+        <h1>
+          Kode Pos {city.name}
+        </h1>
+
+        <p class="kodepos-lead">
+          Pilih kecamatan di {city.name}, {province.name}.
+        </p>
+      </header>
+
+      <section
+        class="kodepos-search"
+        aria-labelledby="district-list"
+      >
+        <div class="kodepos-section-heading">
+          <div>
+            <span class="kodepos-section-eyebrow">
+              Wilayah
+            </span>
+
+            <h2 id="district-list">
+              Kecamatan
+            </h2>
+          </div>
+
+          <span class="kodepos-count">
+            {districts.length} kecamatan
+          </span>
+        </div>
+
+        {districts.length > 0 ? (
+          <div class="kodepos-grid">
+            {districts.map((district) => (
+              <a
+                class="kodepos-card"
+                href={kodePosUrl(
+                  province.slug,
+                  city.slug,
+                  district.slug
+                )}
+              >
+                <div class="kodepos-card-content">
+                  <h2>{district.name}</h2>
+
+                  <p>
+                    Lihat kelurahan, desa, dan kode pos
+                  </p>
+                </div>
+
+                <span class="kodepos-card-arrow">
+                  →
+                </span>
+              </a>
+            ))}
+          </div>
+        ) : (
+          <p>
+            Data kecamatan belum tersedia.
+          </p>
+        )}
+      </section>
+
+    </div>
+  </main>
 </MainLayout>
