@@ -1,98 +1,61 @@
 ---
 import MainLayout from "../layouts/MainLayout.astro";
 import "../styles/kode-pos.css";
-import { kodePosUrl } from "../lib/kode-pos/config";
+import { getProvinces, kodePosUrl } from "../lib/kode-pos/config";
+
+const provinces = await getProvinces();
 ---
 
 <MainLayout
   title="Kode Pos Indonesia"
-  description="Cari kode pos Indonesia berdasarkan provinsi, kota, kecamatan, dan kelurahan."
+  description="Cari kode pos berdasarkan provinsi, kabupaten atau kota, kecamatan, dan kelurahan."
 >
   <main class="kode-pos-page">
     <div class="kode-pos-container">
 
-      <section class="kodepos-header">
+      <header class="kodepos-header">
         <span class="kodepos-eyebrow">Kode Pos Indonesia</span>
-
         <h1>Cari Kode Pos</h1>
-
         <p class="kodepos-lead">
-          Cari informasi kode pos berdasarkan wilayah di Indonesia.
+          Pilih provinsi untuk melihat daftar kabupaten dan kota.
         </p>
-      </section>
+      </header>
 
-      <section class="kodepos-search" aria-labelledby="provinsi-title">
+      <section class="kodepos-search" aria-labelledby="province-list">
         <div class="kodepos-section-heading">
           <div>
             <span class="kodepos-section-eyebrow">Wilayah</span>
-            <h2 id="provinsi-title">Pilih Provinsi</h2>
+            <h2 id="province-list">Pilih Provinsi</h2>
           </div>
+
+          <span class="kodepos-count">
+            {provinces.length} provinsi
+          </span>
         </div>
 
-        <div id="province-list" class="kodepos-grid">
-          <p>Memuat provinsi...</p>
-        </div>
+        {
+          provinces.length > 0 ? (
+            <div class="kodepos-grid">
+              {provinces.map((province) => (
+                <a
+                  class="kodepos-card"
+                  href={kodePosUrl(province.slug)}
+                >
+                  <div class="kodepos-card-content">
+                    <h2>{province.name}</h2>
+                    <p>Lihat kabupaten dan kota</p>
+                  </div>
+
+                  <span class="kodepos-card-arrow">→</span>
+                </a>
+              ))}
+            </div>
+          ) : (
+            <p>Data provinsi belum tersedia.</p>
+          )
+        }
       </section>
 
     </div>
   </main>
 </MainLayout>
-
-<script>
-  import { kodePosApi } from "../lib/kode-pos/config";
-
-  const provinceList = document.getElementById("province-list");
-
-  async function loadProvinces() {
-    if (!provinceList) return;
-
-    try {
-      const provinces = await kodePosApi.provinces();
-
-      if (!provinces.length) {
-        provinceList.innerHTML =
-          "<p>Data provinsi tidak tersedia.</p>";
-        return;
-      }
-
-      provinceList.innerHTML = provinces
-        .map((province) => {
-          const slug = province.name
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/^-|-$/g, "");
-
-          return `
-            <a
-              class="kodepos-card"
-              href="${kodePosUrl(slug)}"
-            >
-              <div class="kodepos-card-content">
-                <h2>${escapeHtml(province.name)}</h2>
-                <p>Lihat kabupaten dan kota</p>
-              </div>
-
-              <span class="kodepos-card-arrow">→</span>
-            </a>
-          `;
-        })
-        .join("");
-    } catch (error) {
-      console.error(error);
-
-      provinceList.innerHTML =
-        "<p>Gagal memuat data provinsi.</p>";
-    }
-  }
-
-  function escapeHtml(value) {
-    return String(value ?? "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-  }
-
-  loadProvinces();
-</script>
