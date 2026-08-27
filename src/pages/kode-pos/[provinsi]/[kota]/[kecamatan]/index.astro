@@ -112,14 +112,14 @@ const postalCodes = await getPostalCodes(
             </tr>
           </thead>
 
-          <tbody>
-            {postalCodes.map((item) => (
-              <tr>
-                <td>{item.subdis_name}</td>
-                <td>{item.postal_code}</td>
-              </tr>
-            ))}
-          </tbody>
+        <tbody>
+  {postalCodes.map((item) => (
+    <tr>
+      <td>{item.name}</td>
+      <td>{item.postal_code}</td>
+    </tr>
+  ))}
+</tbody>
         </table>
       ) : (
         <p>Data kode pos tidak tersedia.</p>
