@@ -10,10 +10,6 @@ export const prerender = false;
 
 const { provinsi, kota, kecamatan } = Astro.params;
 
-/* =========================
-   PROVINSI
-========================= */
-
 const provinces = await getProvinces();
 
 const province = provinces.find(
@@ -21,20 +17,10 @@ const province = provinces.find(
 );
 
 if (!province) {
-  return new Response(
-    "Provinsi tidak ditemukan\nAlamat kode pos yang diminta tidak tersedia.",
-    {
-      status: 404,
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-      },
-    }
-  );
+  return new Response("Provinsi tidak ditemukan", {
+    status: 404,
+  });
 }
-
-/* =========================
-   KOTA / KABUPATEN
-========================= */
 
 const cities = await getCities(
   Astro.locals,
@@ -46,20 +32,10 @@ const city = cities.find(
 );
 
 if (!city) {
-  return new Response(
-    "Kabupaten / kota tidak ditemukan\nAlamat kode pos yang diminta tidak tersedia.",
-    {
-      status: 404,
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-      },
-    }
-  );
+  return new Response("Kabupaten / kota tidak ditemukan", {
+    status: 404,
+  });
 }
-
-/* =========================
-   KECAMATAN
-========================= */
 
 const districts = await getDistricts(
   Astro.locals,
@@ -71,20 +47,10 @@ const district = districts.find(
 );
 
 if (!district) {
-  return new Response(
-    "Kecamatan tidak ditemukan\nAlamat kode pos yang diminta tidak tersedia.",
-    {
-      status: 404,
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-      },
-    }
-  );
+  return new Response("Kecamatan tidak ditemukan", {
+    status: 404,
+  });
 }
-
-/* =========================
-   KODE POS
-========================= */
 
 const postalCodes = await getPostalCodes(
   Astro.locals,
@@ -96,7 +62,6 @@ const postalCodes = await getPostalCodes(
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1"
@@ -122,45 +87,44 @@ const postalCodes = await getPostalCodes(
         {province.name}
       </a>
       /
-      <a
-        href={`/kode-pos/${province.slug}/${city.slug}/`}
-      >
+      <a href={`/kode-pos/${province.slug}/${city.slug}/`}>
         {city.name}
       </a>
       /
       <span>{district.name}</span>
     </nav>
 
-    <h1>
-      Kode Pos {district.name}
-    </h1>
+    <h1>Kode Pos {district.name}</h1>
 
     <p>
       Daftar kode pos {district.name},
-      {city.name}, {province.name}.
+      {city.name},
+      {province.name}.
     </p>
 
-    {postalCodes.length > 0 ? (
-      <table>
-        <thead>
-          <tr>
-            <th>Kelurahan / Desa</th>
-            <th>Kode Pos</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {postalCodes.map((item) => (
+    {
+      postalCodes.length > 0 ? (
+        <table>
+          <thead>
             <tr>
-              <td>{item.subdis_name}</td>
-              <td>{item.postal_code}</td>
+              <th>Kelurahan / Desa</th>
+              <th>Kode Pos</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    ) : (
-      <p>Data kode pos tidak tersedia.</p>
-    )}
+          </thead>
+
+          <tbody>
+            {postalCodes.map((item) => (
+              <tr>
+                <td>{item.subdis_name}</td>
+                <td>{item.postal_code}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <p>Data kode pos tidak tersedia.</p>
+      )
+    }
 
   </main>
 </body>
