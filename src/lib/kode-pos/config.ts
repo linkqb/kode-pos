@@ -1,216 +1,107 @@
-export const API_BASE =
+const API_BASE =
   "https://api-kodepos.linkq.workers.dev/api/kode-pos";
 
-export interface Province {
+export type Province = {
+  id: string;
+  name: string;
+};
+
+export type City = {
+  id: string;
   prov_id: string;
   name: string;
-  slug: string;
-}
+};
 
-export interface City {
+export type District = {
+  id: string;
   city_id: string;
-  prov_id: string;
   name: string;
-  slug: string;
-}
+};
 
-export interface District {
+export type Subdistrict = {
+  id: string;
   dis_id: string;
-  city_id: string;
   name: string;
-  slug: string;
-}
-
-export interface PostalCode {
-  postal_id: string;
-  subdis_id: string;
-  dis_id: string;
-  city_id: string;
-  prov_id: string;
   postal_code: string;
-  subdis_name: string;
-  dis_name: string;
-  city_name: string;
-  prov_name: string;
-}
+};
 
-function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[()]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-async function getJSON<T>(url: string): Promise<T> {
-  const response = await fetch(url);
+async function request<T>(path: string): Promise<T> {
+  const response = await fetch(`${API_BASE}${path}`);
 
   if (!response.ok) {
-    throw new Error(`API error ${response.status}: ${url}`);
+    throw new Error(`API error: ${response.status}`);
   }
 
   return response.json();
 }
 
-/* =========================
-   PROVINSI
-========================= */
+export const kodePosApi = {
+  async provinces(): Promise<Province[]> {
+    const result = await request<{ data: Province[] }>(
+      "/provinsi"
+    );
 
-export async function getProvinces(): Promise<Province[]> {
-  const result = await getJSON<{
-    data: { id: string; name: string }[];
-  }>(`${API_BASE}/provinsi`);
+    return result.data ?? [];
+  },
 
-  return result.data.map((item) => ({
-    prov_id: item.id,
-    name: item.name,
-    slug: slugify(item.name),
-  }));
-}
+  async cities(provId: string): Promise<City[]> {
+    const result = await request<{ data: City[] }>(
+      `/kota?prov_id=${encodeURIComponent(provId)}`
+    );
 
-export async function resolveProvince(
-  _locals: App.Locals,
-  slug: string
-): Promise<Province | undefined> {
-  const provinces = await getProvinces();
+    return result.data ?? [];
+  },
 
-  return provinces.find(
-    (item) =>
-      item.slug === slug ||
-      item.prov_id === slug
-  );
-}
+  async districts(cityId: string): Promise<District[]> {
+    const result = await request<{ data: District[] }>(
+      `/kecamatan?city_id=${encodeURIComponent(cityId)}`
+    );
 
-/* =========================
-   KOTA
-========================= */
+    return result.data ?? [];
+  },
 
-export async function getCities(
-  _locals: App.Locals,
-  provId: string
-): Promise<City[]> {
-  const result = await getJSON<{
-    data: {
-      id: string;
-      prov_id: string;
-      name: string;
-    }[];
-  }>(`${API_BASE}/kota?prov_id=${encodeURIComponent(provId)}`);
+  async subdistricts(disId: string): Promise<Subdistrict[]> {
+    const result = await request<{ data: Subdistrict[] }>(
+      `/kelurahan?dis_id=${encodeURIComponent(disId)}`
+    );
 
-  return result.data.map((item) => ({
-    city_id: item.id,
-    prov_id: item.prov_id,
-    name: item.name,
-    slug: slugify(item.name),
-  }));
-}
+    return result.data ?? [];
+  },
 
-export async function resolveCity(
-  locals: App.Locals,
-  province: Province,
-  slug: string
-): Promise<City | undefined> {
-  const cities = await getCities(locals, province.prov_id);
+  async postal(subdisId: string) {
+    const result = await request<{
+      data: {
+        postal_id: string;
+        subdis_id: string;
+        dis_id: string;
+        city_id: string;
+        prov_id: string;
+        postal_code: string;
+        subdis_name: string;
+        dis_name: string;
+        city_name: string;
+        prov_name: string;
+      };
+    }>(
+      `/postal?subdis_id=${encodeURIComponent(subdisId)}`
+    );
 
-  return cities.find(
-    (item) =>
-      item.slug === slug ||
-      item.city_id === slug
-  );
-}
-
-/* =========================
-   KECAMATAN
-========================= */
-
-export async function getDistricts(
-  _locals: App.Locals,
-  cityId: string
-): Promise<District[]> {
-  const result = await getJSON<{
-    data: {
-      id: string;
-      city_id: string;
-      name: string;
-    }[];
-  }>(
-    `${API_BASE}/kecamatan?city_id=${encodeURIComponent(cityId)}`
-  );
-
-  return result.data.map((item) => ({
-    dis_id: item.id,
-    city_id: item.city_id,
-    name: item.name,
-    slug: slugify(item.name),
-  }));
-}
-
-export async function resolveDistrict(
-  locals: App.Locals,
-  city: City,
-  slug: string
-): Promise<District | undefined> {
-  const districts = await getDistricts(
-    locals,
-    city.city_id
-  );
-
-  return districts.find(
-    (item) =>
-      item.slug === slug ||
-      item.dis_id === slug
-  );
-}
-
-/* =========================
-   KELURAHAN / KODE POS
-========================= */
-
-export async function getPostalCodes(
-  _locals: App.Locals,
-  districtId: string
-): Promise<PostalCode[]> {
-  const result = await getJSON<{
-    data: PostalCode[];
-  }>(
-    `${API_BASE}/kelurahan?dis_id=${encodeURIComponent(
-      districtId
-    )}`
-  );
-
-  return result.data.map((item) => ({
-    postal_id: item.postal_id ?? item.id ?? "",
-    subdis_id: item.subdis_id ?? item.id ?? "",
-    dis_id: item.dis_id,
-    city_id: item.city_id,
-    prov_id: item.prov_id,
-    postal_code: item.postal_code,
-    subdis_name: item.subdis_name ?? item.name,
-    dis_name: item.dis_name ?? "",
-    city_name: item.city_name ?? "",
-    prov_name: item.prov_name ?? "",
-  }));
-}
-
-/* =========================
-   URL
-========================= */
+    return result.data;
+  }
+};
 
 export function kodePosUrl(
   provinsi?: string,
   kota?: string,
   kecamatan?: string
 ) {
-  return (
-    [
-      "/kode-pos",
-      provinsi,
-      kota,
-      kecamatan,
-    ]
-      .filter(Boolean)
-      .map(encodeURIComponent)
-      .join("/") + "/"
-  );
+  return [
+    "/kode-pos",
+    provinsi,
+    kota,
+    kecamatan
+  ]
+    .filter(Boolean)
+    .map(encodeURIComponent)
+    .join("/") + "/";
 }
