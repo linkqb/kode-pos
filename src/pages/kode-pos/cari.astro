@@ -1,11 +1,39 @@
 ---
-const q = Astro.url.searchParams.get("q")?.trim() || "";
+import {
+  getProvinces,
+  getCities,
+} from "../../../lib/kode-pos/config";
 
-const siteUrl =
-  import.meta.env.SITE_URL ||
-  "https://kodepos.linkqb.com";
+export const prerender = false;
 
-const canonicalUrl = `${siteUrl}/kode-pos/cari/`;
+const { provinsi } = Astro.params;
+
+if (!provinsi || provinsi === "cari") {
+  return Astro.redirect("/kode-pos/cari/");
+}
+
+const provinces = await getProvinces();
+
+const province = provinces.find(
+  (item) => item.slug === provinsi
+);
+
+if (!province) {
+  return new Response(
+    `Provinsi tidak ditemukan`,
+    {
+      status: 404,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+      },
+    }
+  );
+}
+
+const cities = await getCities(
+  Astro.locals,
+  province.prov_id
+);
 ---
 
 <!doctype html>
