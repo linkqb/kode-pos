@@ -1,1 +1,68 @@
+---
+import MainLayout from "../../layouts/MainLayout.astro";
+import "../../styles/kode-pos.css";
+import { getProvinces, kodePosUrl } from "../../lib/kode-pos/config";
 
+const provinces = await getProvinces();
+
+const title = "Kode Pos Indonesia";
+const description =
+  "Cari kode pos Indonesia berdasarkan provinsi, kabupaten, kota, kecamatan, dan kelurahan.";
+---
+
+<MainLayout title={title} description={description}>
+  <main class="kode-pos-page">
+    <div class="kode-pos-container">
+
+      <nav class="kode-pos-breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Beranda</a>
+        <span>/</span>
+        <span>Kode Pos</span>
+      </nav>
+
+      <header class="kodepos-header">
+        <span class="kodepos-eyebrow">Kode Pos Indonesia</span>
+
+        <h1>Kode Pos Indonesia</h1>
+
+        <p class="kodepos-lead">
+          Pilih provinsi untuk mencari kode pos berdasarkan wilayah.
+        </p>
+      </header>
+
+      <section class="kodepos-search" aria-labelledby="province-list">
+        <div class="kodepos-section-heading">
+          <div>
+            <span class="kodepos-section-eyebrow">Wilayah</span>
+            <h2 id="province-list">Pilih Provinsi</h2>
+          </div>
+
+          <span class="kodepos-count">
+            {provinces.length} provinsi
+          </span>
+        </div>
+
+        {provinces.length > 0 ? (
+          <div class="kodepos-grid">
+            {provinces.map((province) => (
+              <a
+                class="kodepos-card"
+                href={kodePosUrl(province.slug)}
+              >
+                <div class="kodepos-card-content">
+                  <h2>{province.name}</h2>
+                  <p>Lihat kabupaten dan kota</p>
+                </div>
+
+                <span class="kodepos-card-arrow">→</span>
+              </a>
+            ))}
+          </div>
+        ) : (
+          <p>Data provinsi belum tersedia.</p>
+        )}
+      </section>
+
+    </div>
+  </main>
+</MainLayout>
