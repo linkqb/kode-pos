@@ -4,44 +4,27 @@ const API_BASE =
 
 const q = (Astro.url.searchParams.get("q") || "").trim();
 
-type SearchResult = {
-  postal_id?: string;
-  subdis_id: string;
-  dis_id: string;
-  city_id: string;
-  prov_id: string;
-  postal_code: string;
-  subdis_name: string;
-  dis_name: string;
-  city_name: string;
-  prov_name: string;
-};
-
-let results: SearchResult[] = [];
+let results = [];
 let error = "";
 
 if (q.length >= 2) {
   try {
-    const response = await fetch(
+    const res = await fetch(
       `${API_BASE}/search?q=${encodeURIComponent(q)}`
     );
 
-    if (!response.ok) {
-      throw new Error(`API HTTP ${response.status}`);
+    if (!res.ok) {
+      throw new Error(`API HTTP ${res.status}`);
     }
 
-    const json = await response.json();
+    const json = await res.json();
 
-    results = json.data ?? [];
-  } catch (err) {
-    console.error("Search API error:", err);
+    results = json.data || [];
+  } catch (e) {
+    console.error("SEARCH ERROR:", e);
     error = "Gagal mengambil data pencarian.";
   }
 }
-
-const canonicalUrl = q
-  ? `${Astro.site ?? "https://kodepos.linkqb.com"}/kode-pos/cari/?q=${encodeURIComponent(q)}`
-  : `${Astro.site ?? "https://kodepos.linkqb.com"}/kode-pos/cari/`;
 ---
 
 <!doctype html>
@@ -61,11 +44,10 @@ const canonicalUrl = q
     name="description"
     content="Cari kode pos berdasarkan provinsi, kabupaten atau kota, kecamatan, kelurahan atau desa."
   />
-
-  <link rel="canonical" href={canonicalUrl} />
 </head>
 
 <body>
+
   <main>
 
     <nav>
@@ -81,12 +63,15 @@ const canonicalUrl = q
       kelurahan/desa, atau kode pos.
     </p>
 
-    <form method="get" action="/kode-pos/cari/">
+    <form
+      method="get"
+      action="/kode-pos/cari/"
+    >
       <input
         type="search"
         name="q"
         value={q}
-        placeholder="Contoh: aceh, bandung, 40123..."
+        placeholder="Cari kode pos..."
         autocomplete="off"
         minlength="2"
         required
@@ -100,66 +85,65 @@ const canonicalUrl = q
     {
       q && (
         <section>
+
           <h2>
-            Hasil pencarian untuk "{q}"
+            Hasil pencarian
           </h2>
+
+          <p>
+            Kata pencarian:
+            <strong>{q}</strong>
+          </p>
 
           {
             error ? (
               <p>{error}</p>
             ) : results.length > 0 ? (
-              <>
-                <p>
-                  Ditemukan {results.length} hasil.
-                </p>
+              <div>
 
-                <div>
-                  {results.map((item) => (
-                    <article>
-                      <h3>
-                        {item.subdis_name}
-                      </h3>
+                {results.map((item) => (
+                  <article>
 
-                      <p>
-                        <strong>Kode Pos:</strong>{" "}
+                    <h3>
+                      {item.subdis_name}
+                    </h3>
+
+                    <p>
+                      <strong>
                         {item.postal_code}
-                      </p>
+                      </strong>
+                    </p>
 
-                      <p>
-                        {item.dis_name}, {item.city_name},{" "}
-                        {item.prov_name}
-                      </p>
+                    <p>
+                      {item.dis_name},{" "}
+                      {item.city_name},{" "}
+                      {item.prov_name}
+                    </p>
 
-                      <a
-                        href={`/kode-pos/${slugify(item.prov_name)}/${slugify(item.city_name)}/${slugify(item.dis_name)}/`}
-                      >
-                        Lihat kecamatan
-                      </a>
-                    </article>
-                  ))}
-                </div>
-              </>
+                  </article>
+                ))}
+
+              </div>
             ) : (
               <p>
                 Tidak ditemukan hasil untuk "{q}".
               </p>
             )
           }
+
         </section>
       )
     }
 
     {
       !q && (
-        <section>
-          <p>
-            Masukkan nama wilayah atau kode pos untuk mencari.
-          </p>
-        </section>
+        <p>
+          Masukkan nama wilayah atau kode pos untuk mencari.
+        </p>
       )
     }
 
   </main>
+
 </body>
 </html>
-
