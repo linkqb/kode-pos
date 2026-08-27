@@ -2,6 +2,7 @@
 import {
   getProvinces,
   getCities,
+  getDistricts,
 } from "../../../../lib/kode-pos/config";
 
 export const prerender = false;
@@ -46,12 +47,18 @@ if (!city) {
     }
   );
 }
+
+const districts = await getDistricts(
+  Astro.locals,
+  city.city_id
+);
 ---
 
 <!doctype html>
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
+
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1"
@@ -63,7 +70,7 @@ if (!city) {
 
   <meta
     name="description"
-    content={`Daftar kode pos ${city.name}, ${province.name}.`}
+    content={`Daftar kecamatan dan kode pos ${city.name}, ${province.name}.`}
   />
 </head>
 
@@ -87,9 +94,21 @@ if (!city) {
       {city.name}, {province.name}.
     </p>
 
-    <p>
-      Memuat data kecamatan...
-    </p>
+    {districts.length > 0 ? (
+      <ul>
+        {districts.map((district) => (
+          <li>
+            <a
+              href={`/kode-pos/${province.slug}/${city.slug}/${district.slug}/`}
+            >
+              {district.name}
+            </a>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p>Data kecamatan tidak tersedia.</p>
+    )}
 
   </main>
 </body>
